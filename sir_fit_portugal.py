@@ -36,6 +36,13 @@ def dR_dt(gamma, I):
 
 def SIR_model(t, y, beta=3.6, gamma=2.9):
     S, I, R = y
+
+    # if callable(beta):
+    #     pass
+
+    # if callable(gamma):
+    #     pass
+
     S_out = dS_dt(beta, S, I)
     I_out = dI_dt(beta, S, I, gamma)
     R_out = dR_dt(gamma, I)
@@ -47,8 +54,6 @@ def predict():
     n_infected = 1
     max_days = 100
     initial_state = [(N - n_infected) / N, n_infected / N, 0]
-    R_t = 3.6  # reproductin number
-    t_inf = 5.2  # average infectious period
     beta = 0.7
     gamma = 0.2
     args = beta, gamma
@@ -71,18 +76,24 @@ def plot(prediction):
     plt.show()
 
 
-def plot_train(prediction):
+def plot_train(prediction, data):
     fig, ax = plt.subplots(1, 1, figsize=(12, 12))
     fig.suptitle('SIR model')
 
+    ax.plot(prediction['S'], label='Susceptible')
     ax.plot(prediction['I'], label='Infected')
     ax.plot(prediction['R'], label='Recovered')
+
+    ax.scatter(data.index, data['S'], label='Susceptible Actual')
+    ax.scatter(data.index, data['I'], label='Infected Actual')
+    ax.scatter(data.index, data['R'], label='Recovered Actual')
 
     ax.legend()
     plt.show()
 
 
-def loss(params, data, population, return_solution=False, forecast_days=0, optim_days=21):
+def loss(params, data, population, return_solution=False,
+         forecast_days=0, optim_days=20):
     beta, gamma = params
     N = population
     n_infected = data['I'].iloc[0]
@@ -97,9 +108,9 @@ def loss(params, data, population, return_solution=False, forecast_days=0, optim
 
     S, I, R = prediction.y
 
-    y_pred_infected = I * population
+    y_pred_infected = np.clip(I, 0, np.inf) * population
     y_true_cases = data['I'].values
-    y_pred_recovered = R * population
+    y_pred_recovered = np.clip(R, 0, np.inf) * population
     y_true_recovered = data['R'].values
 
     optim_days = int(min(optim_days, len(data)))
@@ -107,38 +118,42 @@ def loss(params, data, population, return_solution=False, forecast_days=0, optim
     weights = 1 / np.arange(1, optim_days+1)[::-1]
 
     mse_infected = mean_squared_log_error(
-        y_true_cases[-optim_days:], y_pred_infected[-optim_days:],  weights)
+        y_true_cases[-optim_days:], y_pred_infected[-optim_days:], weights)
     mse_recovered = mean_squared_log_error(
         y_true_recovered[-optim_days:], y_pred_recovered[-optim_days:],
         weights)
 
-    mse = np.mean([mse_infected, mse_recovered])
+    mse = np.mean([mse_infected])
 
     if return_solution:
         return mse, prediction
     return mse
 
 
-def fit(initial_guess=[0.7, 0.2], bounds=[(0.2, 2), (0.0001, 0.3)]):
+def fit(initial_guess=[0.7, 0.2], bounds=[(0.02, 2), (0.0001, 0.3)]):
     train, test, population = load_data()
 
     res = minimize(loss, initial_guess, bounds=bounds,
                    args=(train, population), method='L-BFGS-B')
 
-    mse, sol = loss(res.x, train, population, True, forecast_days=len(test))
+    # how long should the forecast be?
+    t = 100
 
+    # compute SIR based on fitted X
+    mse, sol = loss(res.x, train, population, True,
+                    forecast_days=(len(test) + t))
     S, I, R = sol.y
 
+    # gather predictions in data frane scaled by populatiobn size
     pred = pd.DataFrame(
         {
-            'S': S * population,
-            'I': I * population,
-            'R': R * population
-        },
-        index=train.index.append(test.index)
+            'S': np.clip(S, 0, np.inf) * population,
+            'I': np.clip(I, 0, np.inf) * population,
+            'R': np.clip(R, 0, np.inf) * population
+        }
     )
 
-    pred_test = pred.iloc[len(train):, :]
+    pred_test = pred.iloc[len(train):(len(train) + len(test)), :]
 
     mse_infected = mean_squared_log_error(test['I'], pred_test['I'])
     mse_recovered = mean_squared_log_error(test['R'], pred_test['R'])
@@ -147,11 +162,12 @@ def fit(initial_guess=[0.7, 0.2], bounds=[(0.2, 2), (0.0001, 0.3)]):
 
     print(mse)
     print(res.x)
-    plot_train(pred)
+    print(res.x[0] / res.x[1])
+    plot_train(pred, pd.concat([train, test]))
     return mse
 
 
 if __name__ == '__main__':
     pred = predict()
-    # plot(pred)
+    plot(pred)
     fit()
