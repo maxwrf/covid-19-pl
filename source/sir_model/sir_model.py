@@ -1,5 +1,8 @@
 import numpy as np
 import matplotlib.pyplot as plt
+from sklearn.metrics import mean_squared_log_error
+from scipy.optimize import minimize
+from solver.runge_kutta4 import RK4
 
 
 class SIR():
@@ -56,3 +59,54 @@ class SIR():
             ax.plot(R)
 
             plt.show()
+
+    @staticmethod
+    def loss(params, data, population):
+        beta_fitted, gamma_fitted = params
+
+        # TODO: Set initial conditions to population or data!
+        S0, I0, R0 = [
+            n/population for n in (data['S'].iloc[0],
+                                   data['I'].iloc[0],
+                                   data['R'].iloc[0],)]
+
+        sir = SIR(beta_fitted, gamma_fitted, S0, I0, R0)
+        solver = RK4(sir)
+        solver.set_initial_conditions(sir.initial_conds)
+
+        optimization_days = len(data)
+
+        time_steps = np.linspace(0, optimization_days, optimization_days)
+        u, t = solver.solve(time_steps)
+        Spreds, Ipreds, Rpreds = u[:, 0], u[:, 1], u[:, 2]
+
+        weights = 1 / np.arange(1, optimization_days + 1)[::-1]
+
+        msle_suspectibles = mean_squared_log_error(
+            data['S'] / population, Spreds, weights)
+
+        msle_infected = mean_squared_log_error(
+            data['I'] / population, Ipreds, weights)
+
+        msle_recovered = mean_squared_log_error(
+            data['R'] / population, Rpreds, weights)
+
+        msle = np.mean([msle_suspectibles,
+                        msle_infected,
+                        msle_recovered])
+        print(msle)
+        return msle
+
+    @staticmethod
+    def fit(data, population):
+        initial_guess = [0.7, 0.2]
+        bounds = [(0.02, 3),
+                  (0.001, 2)]
+        best_fit = minimize(SIR.loss,
+                            initial_guess,
+                            bounds=bounds,
+                            args=(data, population),
+                            method='L-BFGS-B')
+        print(best_fit)
+        beta, gamma = best_fit.x
+        return beta, gamma
