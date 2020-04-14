@@ -3,11 +3,12 @@ from solver.forward_euler import ForwardEuler
 import numpy as np
 from sir_model.dynamic_beta import beta
 from sir_model.dynamic_gamma import gamma
+from solver.runge_kutta4 import RK4
 
 
 def run():
     sir = SIR(beta, gamma, 1500, 1, 0)
-    solver = ForwardEuler(sir)
+    solver = RK4(sir)
     solver.set_initial_conditions(sir.initial_conds)
 
     # Looking at a 60 days time span using 1001 integration time steps
