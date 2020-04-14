@@ -3,6 +3,7 @@ import pandas as pd
 from scipy.optimize import minimize
 from scipy.integrate import solve_ivp
 import matplotlib.pyplot as plt
+from sklearn.metrics import mean_squared_log_error
 
 
 def load_data():
@@ -15,6 +16,10 @@ def load_data():
         (data['Recoveries|Total'] + data['Deaths|Total'])
     data['R'] = data['Recoveries|Total'] + data['Deaths|Total']
     data = data[['S', 'I', 'R']]
+    cut = int(0.8 * len(data))
+    train = data.iloc[:cut, :]
+    test = data.iloc[cut:, :]
+    return train, test, population
 
 
 def dS_dt(beta, S, I):
@@ -56,32 +61,97 @@ def predict():
 def plot(prediction):
     S, I, R = prediction.y
     fig, ax = plt.subplots(1, 1, figsize=(12, 12))
+    fig.suptitle('SIR model')
 
-    ax.plot(S)
-    ax.plot(I)
-    ax.plot(R)
+    ax.plot(S, label='Susceptible')
+    ax.plot(I, label='Infected')
+    ax.plot(R, label='Recovered')
 
+    ax.legend()
     plt.show()
 
-# def loss(point, data, recovered, S0, I0, R0):
-#     beta, gamma = point
-#     span = len(data)
-#     solution = solve_ivp(SIR_model, [0, span], [S0, I0, R0],
-#                          t_eval=np.arange(0, span, 1), vectorized=True)
-#     return np.sqrt(np.mean(solution.y[1] - data) ** 2)
 
-# def train(data):
-#     optimal = minimize(loss,
-#                        [0.001, 0.001],
-#                        args=(data['S'], data['R'], S0, I0, R0),
-#                        method='L-BFGS-B',
-#                        bounds=[(0.00000001, 0.4),
-#                                (0.00000001, 0.4)])
-#     print(optimal)
-#     beta, gamma = optimal.x
-#     return beta, gamma
+def plot_train(prediction):
+    fig, ax = plt.subplots(1, 1, figsize=(12, 12))
+    fig.suptitle('SIR model')
+
+    ax.plot(prediction['I'], label='Infected')
+    ax.plot(prediction['R'], label='Recovered')
+
+    ax.legend()
+    plt.show()
+
+
+def loss(params, data, population, return_solution=False, forecast_days=0, optim_days=21):
+    beta, gamma = params
+    N = population
+    n_infected = data['I'].iloc[0]
+    max_days = len(data) + forecast_days
+
+    initial_state = [(N - n_infected) / N, n_infected / N, 0]
+    args = (beta, gamma)
+
+    prediction = solve_ivp(
+        SIR_model, [0, max_days], initial_state,
+        args=args, t_eval=np.arange(max_days))
+
+    S, I, R = prediction.y
+
+    y_pred_infected = I * population
+    y_true_cases = data['I'].values
+    y_pred_recovered = R * population
+    y_true_recovered = data['R'].values
+
+    optim_days = int(min(optim_days, len(data)))
+
+    weights = 1 / np.arange(1, optim_days+1)[::-1]
+
+    mse_infected = mean_squared_log_error(
+        y_true_cases[-optim_days:], y_pred_infected[-optim_days:],  weights)
+    mse_recovered = mean_squared_log_error(
+        y_true_recovered[-optim_days:], y_pred_recovered[-optim_days:],
+        weights)
+
+    mse = np.mean([mse_infected, mse_recovered])
+
+    if return_solution:
+        return mse, prediction
+    return mse
+
+
+def fit(initial_guess=[0.7, 0.2], bounds=[(0.2, 2), (0.0001, 0.3)]):
+    train, test, population = load_data()
+
+    res = minimize(loss, initial_guess, bounds=bounds,
+                   args=(train, population), method='L-BFGS-B')
+
+    mse, sol = loss(res.x, train, population, True, forecast_days=len(test))
+
+    S, I, R = sol.y
+
+    pred = pd.DataFrame(
+        {
+            'S': S * population,
+            'I': I * population,
+            'R': R * population
+        },
+        index=train.index.append(test.index)
+    )
+
+    pred_test = pred.iloc[len(train):, :]
+
+    mse_infected = mean_squared_log_error(test['I'], pred_test['I'])
+    mse_recovered = mean_squared_log_error(test['R'], pred_test['R'])
+
+    mse = np.mean([mse_infected, mse_recovered])
+
+    print(mse)
+    print(res.x)
+    plot_train(pred)
+    return mse
 
 
 if __name__ == '__main__':
     pred = predict()
-    plot(pred)
+    # plot(pred)
+    fit()
