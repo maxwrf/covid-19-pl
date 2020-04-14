@@ -3,4 +3,5 @@
 - https://www.kaggle.com/anjum48/seir-hcd-model
 - https://www.kaggle.com/saga21/covid-global-forecast-sir-model-ml-regressions
 - https://en.wikipedia.org/wiki/Compartmental_models_in_epidemiology
--
+- https://www.youtube.com/watch?v=mwJXjxMTwAw&t=1129s
+- https://en.wikipedia.org/wiki/Euler_method
