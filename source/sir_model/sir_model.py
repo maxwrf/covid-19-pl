@@ -2,7 +2,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 from sklearn.metrics import mean_squared_log_error
 from scipy.optimize import minimize
-from solver.runge_kutta4 import RK4
+from source.solver.runge_kutta4 import RK4
 
 
 class SIR():

@@ -1,4 +1,4 @@
-from solver.base_solver import Solver
+from source.solver.base_solver import Solver
 
 
 class ForwardEuler(Solver):

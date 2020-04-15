@@ -1,9 +1,9 @@
-from sir_model.sir_model import SIR
-from solver.forward_euler import ForwardEuler
+from source.sir_model.sir_model import SIR
+from source.solver.forward_euler import ForwardEuler
 import numpy as np
-from sir_model.dynamic_beta import beta
-from sir_model.dynamic_gamma import gamma
-from solver.runge_kutta4 import RK4
+from source.sir_model.dynamic_beta import beta
+from source.sir_model.dynamic_gamma import gamma
+from source.solver.runge_kutta4 import RK4
 import pandas as pd
 
 
@@ -24,7 +24,7 @@ def load_data():
     return data, population
 
 
-def run():
+def run_simple():
     sir = SIR(beta, gamma, 1500, 1, 0)
     # solver = ForwardEuler(sir)
     solver = RK4(sir)
@@ -36,8 +36,11 @@ def run():
     # Run solver
     u, t = solver.solve(time_steps)
     Spreds, Ipreds, Rpreds = u[:, 0], u[:, 1], u[:, 2]
-    SIR.sir_plot(Spreds, Ipreds, Rpreds, t)
+    # SIR.sir_plot(Spreds, Ipreds, Rpreds, t)
+    return Spreds, Ipreds, Rpreds
 
+
+def run_fit():
     # fit Portugal data to generate beta and gamma
     # TODO: pass solver as argument
     beta_fitted, gamma_fitted = SIR.fit(*load_data())
@@ -57,4 +60,4 @@ def run():
 
 
 if __name__ == '__main__':
-    run()
+    run_simple()
