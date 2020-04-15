@@ -1,5 +1,5 @@
 from sir_model.sir_model import SIR
-# from solver.forward_euler import ForwardEuler
+from solver.forward_euler import ForwardEuler
 import numpy as np
 from sir_model.dynamic_beta import beta
 from sir_model.dynamic_gamma import gamma
@@ -40,7 +40,20 @@ def run():
 
     # fit Portugal data to generate beta and gamma
     # TODO: pass solver as argument
-    SIR.fit(*load_data())
+    beta_fitted, gamma_fitted = SIR.fit(*load_data())
+    data, population = load_data()
+    S0, I0, R0 = [
+        n/population for n in (data['S'].iloc[0],
+                               data['I'].iloc[0],
+                               data['R'].iloc[0],)]
+    sir = SIR(beta_fitted, gamma_fitted, S0, I0, R0)
+    solver = ForwardEuler(sir)
+    solver.set_initial_conditions(sir.initial_conds)
+    time_steps = np.linspace(0, len(data) + 100, 10001)
+    u, t = solver.solve(time_steps)
+    Spreds, Ipreds, Rpreds = u[:, 0] * \
+        population, u[:, 1]*population, u[:, 2]*population
+    SIR.sir_plot(Spreds, Ipreds, Rpreds, t)
 
 
 if __name__ == '__main__':

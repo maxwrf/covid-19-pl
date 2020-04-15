@@ -61,47 +61,56 @@ class SIR():
             plt.show()
 
     @staticmethod
-    def loss(params, data, population):
+    def loss(params, data, population, optim_days=20):
+        # Unpack beta and gamma on which ti compute the loss
         beta_fitted, gamma_fitted = params
 
-        # TODO: Set initial conditions to population or data!
+        # Get initial conditions from data
         S0, I0, R0 = [
             n/population for n in (data['S'].iloc[0],
                                    data['I'].iloc[0],
                                    data['R'].iloc[0],)]
 
+        # Forward integrate to generate predictions
         sir = SIR(beta_fitted, gamma_fitted, S0, I0, R0)
         solver = RK4(sir)
         solver.set_initial_conditions(sir.initial_conds)
-
-        optimization_days = len(data)
-
-        time_steps = np.linspace(0, optimization_days, optimization_days)
+        time_steps = np.linspace(0, len(data), len(data))
         u, t = solver.solve(time_steps)
         Spreds, Ipreds, Rpreds = u[:, 0], u[:, 1], u[:, 2]
 
-        weights = 1 / np.arange(1, optimization_days + 1)[::-1]
+        # Compute loss given the predictions
+        optim_days = int(min(optim_days, len(data)))
+        weights = 1 / np.arange(1, optim_days + 1)[::-1]
 
         msle_suspectibles = mean_squared_log_error(
-            data['S'] / population, Spreds, weights)
+            data['S'][-optim_days:],
+            np.clip(Spreds[-optim_days:], 0, np.inf) * population,
+            weights)
 
         msle_infected = mean_squared_log_error(
-            data['I'] / population, Ipreds, weights)
+            data['I'][-optim_days:],
+            np.clip(Ipreds[-optim_days:], 0, np.inf) * population,
+            weights)
 
         msle_recovered = mean_squared_log_error(
-            data['R'] / population, Rpreds, weights)
+            data['R'][-optim_days:],
+            np.clip(Rpreds[-optim_days:], 0, np.inf) * population,
+            weights)
 
-        msle = np.mean([msle_suspectibles,
-                        msle_infected,
-                        msle_recovered])
+        msle = np.mean([
+            # msle_suspectibles,
+            msle_infected,
+            # msle_recovered
+        ])
         print(msle)
         return msle
 
     @staticmethod
     def fit(data, population):
-        initial_guess = [0.7, 0.2]
-        bounds = [(0.02, 3),
-                  (0.001, 2)]
+        initial_guess = [.0001, .001]
+        bounds = [(0.0002, .7),
+                  (0.001, .7)]
         best_fit = minimize(SIR.loss,
                             initial_guess,
                             bounds=bounds,
