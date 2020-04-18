@@ -36,8 +36,10 @@ def run_simple():
     # Run solver
     u, t = solver.solve(time_steps)
     Spreds, Ipreds, Rpreds = u[:, 0], u[:, 1], u[:, 2]
-    # SIR.sir_plot(Spreds, Ipreds, Rpreds, t)
-    return Spreds, Ipreds, Rpreds
+
+    bytes_object = SIR.sir_plot(Spreds, Ipreds, Rpreds, t)
+
+    return bytes_object
 
 
 def run_fit():

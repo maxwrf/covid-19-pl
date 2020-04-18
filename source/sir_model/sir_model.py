@@ -1,8 +1,10 @@
+import io
 import numpy as np
 import matplotlib.pyplot as plt
 from sklearn.metrics import mean_squared_log_error
 from scipy.optimize import minimize
 from source.solver.runge_kutta4 import RK4
+import matplotlib
 
 
 class SIR():
@@ -53,12 +55,18 @@ class SIR():
     @staticmethod
     def sir_plot(S, I, R, t):
         if S.ndim == I.ndim == R.ndim == 1:
-            fig, ax = plt.subplots(1, 1)
-            ax.plot(S)
-            ax.plot(I)
-            ax.plot(R)
+            plt.ioff()
+            matplotlib.pyplot.switch_backend('Agg')
 
-            plt.show()
+            plt.plot(S)
+            plt.plot(I)
+            plt.plot(R)
+
+            bytes_image = io.BytesIO()
+            plt.savefig(bytes_image, format='png')
+            bytes_image.seek(0)
+
+            return bytes_image
 
     @staticmethod
     def loss(params, data, population, optim_days=20):

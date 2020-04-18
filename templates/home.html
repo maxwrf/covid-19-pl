@@ -1,8 +1,16 @@
 {% extends "layout.html" %}
 {% block content %}
 <h1>Home</h1>
-{% for pred in preds %}
-<p>{{ pred }}</p>
+<div class="row">
+    <div class="col-sm-6">
+        <h4>Plot</h4>
+        <div class="img">
+            <img class="img-fluid" src="{{ base_url }}/basic_plot?dummy={{time}}">
+        </div>
+    </div>
+</div>
 
-{% endfor %}
+
+
+
 {% endblock content%}
