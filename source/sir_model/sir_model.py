@@ -111,7 +111,7 @@ class SIR():
             msle_infected,
             # msle_recovered
         ])
-        print(msle)
+        # print(msle)
         return msle
 
     @staticmethod
@@ -124,6 +124,6 @@ class SIR():
                             bounds=bounds,
                             args=(data, population),
                             method='L-BFGS-B')
-        print(best_fit)
+        # print(best_fit)
         beta, gamma = best_fit.x
         return beta, gamma

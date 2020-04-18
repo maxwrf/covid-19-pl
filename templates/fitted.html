@@ -1,4 +1,16 @@
 {% extends "layout.html" %}
 {% block content %}
 <h1>Fitted model</h1>
+{% for table in tables %}
+{{titles[loop.index]}}
+{{ table|safe }}
+{% endfor %}
+<div class="row">
+
+    <h4>Plot</h4>
+    <div class="img">
+        <img class="img-fluid" src="{{ url_for('fitted_plot') }}?dummy={{time}}">
+    </div>
+
+</div>
 {% endblock content%}

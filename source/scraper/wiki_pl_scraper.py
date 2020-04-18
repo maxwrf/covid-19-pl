@@ -1,7 +1,9 @@
-import requests
-import pandas as pd
-from bs4 import BeautifulSoup
 import os
+from bs4 import BeautifulSoup
+import pandas as pd
+import requests
+from datetime import date
+
 
 headers = {
     'User-Agent': "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_10_1)\
@@ -13,6 +15,17 @@ wiki_url = 'https://en.wikipedia.org/wiki/2020_coronavirus_pandemic_in_Portugal'
 
 
 def crawl_wiki_pl(save_csv=True, no_total=True):
+    try:
+        today = date.today()
+        dt = today.strftime("%Y-%m-%d")
+        d = pd.read_csv('data/pl_regions.csv').iloc[-2, 0]
+
+        if d == dt:
+            return
+
+    except BaseException:
+        pass
+
     page = requests.get(wiki_url, headers=headers).text
     soup = BeautifulSoup(page, 'lxml')
     table = soup.find_all('table')[4]
@@ -28,8 +41,6 @@ def crawl_wiki_pl(save_csv=True, no_total=True):
     # save to hard drive
     if save_csv:
         df_by_region.to_csv(os.getcwd() + '/data/pl_regions.csv', index=False)
-
-    return df_by_region.iloc[:, :8].set_index('Date (DGS report)')
 
 
 if __name__ == '__main__':

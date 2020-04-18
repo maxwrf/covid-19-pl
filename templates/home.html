@@ -2,11 +2,13 @@
 {% block content %}
 <h1>Home</h1>
 <div class="row">
-    <div class="col-sm-6">
-        <h4>Plot</h4>
-        <div class="img">
-            <img class="img-fluid" src="{{ base_url }}/basic_plot?dummy={{time}}">
-        </div>
+    <h4>Plot</h4>
+    <div class="img">
+        {% if beta == gamma == None %}
+        <img class="img-fluid" src="{{ url_for('basic_plot') }}?dummy={{time}}">
+        {% else %}
+        <img class="img-fluid" src="{{ url_for('basic_plot') }}?dummy={{time}}&b={{b}}&g={{g}}">
+        {% endif %}
     </div>
 </div>
 

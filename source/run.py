@@ -7,7 +7,7 @@ from source.solver.runge_kutta4 import RK4
 import pandas as pd
 
 
-def load_data():
+def load_data(frontend=False):
     # TODO: move somewhere else
     population = 10.28 * 1e06
 
@@ -19,13 +19,23 @@ def load_data():
     data['I'] = data['Confirmed cases|Total'] - \
         (data['Recoveries|Total'] + data['Deaths|Total'])
     data['R'] = data['Recoveries|Total'] + data['Deaths|Total']
-    data = data[['S', 'I', 'R']]
+
+    # last row is total
+    data = data.iloc[:-1, :]
+
+    if frontend:
+        data = data[['Date (DGS report)', 'S', 'I', 'R']]
+        data.rename(columns={'S': 'Susceptible',
+                             'I': 'Infectious',
+                             'R': 'Recovered'}, inplace=True)
+    else:
+        data = data[['S', 'I', 'R']]
 
     return data, population
 
 
-def run_simple():
-    sir = SIR(beta, gamma, 1500, 1, 0)
+def run_simple(b, g):
+    sir = SIR(b, g, 1500, 1, 0)
     # solver = ForwardEuler(sir)
     solver = RK4(sir)
     solver.set_initial_conditions(sir.initial_conds)
@@ -58,7 +68,9 @@ def run_fit():
     u, t = solver.solve(time_steps)
     Spreds, Ipreds, Rpreds = u[:, 0] * \
         population, u[:, 1]*population, u[:, 2]*population
-    SIR.sir_plot(Spreds, Ipreds, Rpreds, t)
+    bytes_object = SIR.sir_plot(Spreds, Ipreds, Rpreds, t)
+
+    return bytes_object
 
 
 if __name__ == '__main__':
