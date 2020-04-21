@@ -5,3 +5,4 @@
 - https://en.wikipedia.org/wiki/Compartmental_models_in_epidemiology
 - https://www.youtube.com/watch?v=mwJXjxMTwAw&t=1129s
 - https://en.wikipedia.org/wiki/Euler_method
+- https://gitlab.com/dice89/python-plotting-api

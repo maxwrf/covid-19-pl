@@ -1,15 +1,76 @@
 {% extends "layout.html" %}
 {% block content %}
-<h1>Home</h1>
-<div class="row">
-    <h4>Plot</h4>
+<div class="content-section">
+    <h3>The SIR model using your parameters</h3>
+    <p class='text-muted'>It is always assumed that at t=0 there is one infected individual and zero recovered
+        cases. Current parameters:</p>
+    <ul class="pt-3">
+        <li>Beta: {{b}}</li>
+        <li>Gamma: {{g}}</li>
+        <li>Population: {{p}}</li>
+        <li>Time horizon: {{integ_t}}</li>
+    </ul>
     <div class="img">
         {% if beta == gamma == None %}
         <img class="img-fluid" src="{{ url_for('basic_plot') }}?dummy={{time}}">
         {% else %}
-        <img class="img-fluid" src="{{ url_for('basic_plot') }}?dummy={{time}}&b={{b}}&g={{g}}">
+        <img class="img-fluid" src="{{ url_for('basic_plot') }}?dummy={{time}}&b={{b}}&g={{g}}&p={{p}}&t={{integ_t}}">
         {% endif %}
     </div>
+    <h4 class="pt-4">Model overview</h4>
+    <div class="img pt-3">
+        <img class="img-fluid" src="https://upload.wikimedia.org/wikipedia/commons/9/93/SIR_Flow_Diagram.svg"
+            alt="Sir Model">
+    </div>
+    <ul class="pt-3">
+        <li class="pt-3">The population is always completely defined by N=S+I+R</li>
+        <li>Where individuals can move only from S to and from I to R</li>
+        <li>Hence the entire system can be fully described by three equations</li>
+    </ul>
+    <ol>
+        <br>
+        <li>S(t + dt) = S(t)-B*S*I*dt</li>
+        <ul style="padding-left:60px">
+            <li>S(t) decreases by the number of new infections</li>
+            <li>Where every I can infect every S</li>
+            <li>Where the term is increasing in the time step dt</li>
+            <li>Where the term is increasing in the infection rate B</li>
+        </ul>
+        <br>
+        <li>I(t + dt) = I(t)+B*S*I*dt-G*I*dt</li>
+        <ul style="padding-left:60px">
+            <li>S(t) increases by the number of new infections (hence the term subtracted above needs to be added)</li>
+            <li>S(t) decreases by the number of recovered / dead people</li>
+            <li>Where every I can be recovered</li>
+            <li>Where the recovery term is increasing in the time step dt</li>
+            <li>Where the recovery term is increasing in the recovery rate G</li>
+        </ul>
+        <br>
+        <li>R(t + dt) = R(t)+G*I*dt</li>
+        <ul style="padding-left:60px">
+            <li>R(t) increases by the number of new recoveries</li>
+            <li>Rational for the term is the same as for infected</li>
+        </ul>
+    </ol>
+
+    <p style="padding-left:20px">From the above equations the derivatives can be derived simply:</p>
+
+    <ol>
+        <li>(S(t + dt) - S(t)) / dt = -B*S*I</li>
+        <li>(I(t + dt) - I(t)) / dt = B*S*I-G*I</li>
+        <li>(R(t + dt) - R(t)) / dt = G*I</li>
+    </ol>
+
+    <p style="padding-left:20px">So what is left is solving the system of differential equations at every t:</p>
+    <ul>
+        <li>Now the system can be forward integrated always by a single time step</li>
+        <li>This is due to the fact that the system is fully defined in t=0</li>
+        <li>Easiest way is to do so using the Forward Euler Method:</li>
+        <ul style="padding-left:60px">
+            <li>Which basically says: y(t+dt) = y(t) + dt * f(y(t), t)</li>
+            <li>Where in our case f(y(t), t) are the partial derivatives from above</li>
+        </ul>
+    </ul>
 </div>
 
 

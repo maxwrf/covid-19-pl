@@ -12,15 +12,34 @@ app = Flask(__name__)
 @app.route('/')
 @app.route('/home')
 def home():
-    try:
-        # print(request.__dict__)
+    if request.args['beta'] == '':
+        beta = 0.0005
+    else:
         beta = request.args['beta']
+
+    if request.args['gamma'] == '':
+        gamma = 0.1
+    else:
         gamma = request.args['gamma']
-    except BaseException:
-        beta = gamma = None
+
+    if request.args['population'] == '':
+        population = 1500
+    else:
+        population = request.args['population']
+
+    if request.args['time'] == '':
+        integ_time = 60
+    else:
+        integ_time = request.args['time']
 
     t = time.time()  # to prevent browser from caching images
-    return render_template('home.html', time=t, b=beta, g=gamma)
+
+    return render_template('home.html',
+                           time=t,
+                           b=beta,
+                           g=gamma,
+                           p=population,
+                           integ_t=integ_time)
 
 
 @app.route('/basic_plot', methods=['GET'])
@@ -29,17 +48,16 @@ def basic_plot():
         # check for user input
         beta = request.args['b']
         gamma = request.args['g']
-        print(type(beta))
-        print(type(gamma))
-        if beta == 'None' or gamma == 'None':
-            beta = 0.0005
-            gamma = 0.1
-        else:
-            beta = float(beta)
-            gamma = float(gamma)
-            bytes_object = run_simple(beta, gamma)
+        population = request.args['p']
+        time = request.args['t']
 
-        bytes_object = run_simple(beta, gamma)
+        beta = float(beta)
+        gamma = float(gamma)
+        population = int(population)
+        time = int(time)
+        bytes_object = run_simple(beta, gamma, population, time)
+
+        bytes_object = run_simple(beta, gamma, population, time)
 
         return send_file(bytes_object,
                          attachment_filename='plot.png',

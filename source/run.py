@@ -12,16 +12,15 @@ def load_data(frontend=False):
     population = 10.28 * 1e06
 
     data = pd.read_csv('data/pl_regions.csv')
+    data = data.iloc[:-3, :]  # last rows are total
     data = data[['Confirmed cases|Total', 'Recoveries|Total',
                  'Deaths|Total', 'Date (DGS report)']]
-
-    data['S'] = population - data['Confirmed cases|Total']
+    data[['Confirmed cases|Total', 'Recoveries|Total', 'Deaths|Total']] = data[[
+        'Confirmed cases|Total', 'Recoveries|Total', 'Deaths|Total']].astype(int)
+    data['S'] = population - data[['Confirmed cases|Total']]
     data['I'] = data['Confirmed cases|Total'] - \
         (data['Recoveries|Total'] + data['Deaths|Total'])
     data['R'] = data['Recoveries|Total'] + data['Deaths|Total']
-
-    # last row is total
-    data = data.iloc[:-1, :]
 
     if frontend:
         data = data[['Date (DGS report)', 'S', 'I', 'R']]
@@ -34,14 +33,15 @@ def load_data(frontend=False):
     return data, population
 
 
-def run_simple(b, g):
-    sir = SIR(b, g, 1500, 1, 0)
+def run_simple(b, g, p, t):
+    sir = SIR(b, g, p, 1, 0)
+    print(p)
     # solver = ForwardEuler(sir)
     solver = RK4(sir)
     solver.set_initial_conditions(sir.initial_conds)
 
-    # Looking at a 60 days time span using 1001 integration time steps
-    time_steps = np.linspace(0, 60, 1001)
+    # Looking at a t (60) days time span using 1001 integration time steps
+    time_steps = np.linspace(0, t, 1001)
 
     # Run solver
     u, t = solver.solve(time_steps)

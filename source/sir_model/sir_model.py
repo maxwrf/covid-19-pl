@@ -58,9 +58,15 @@ class SIR():
             plt.ioff()
             matplotlib.pyplot.switch_backend('Agg')
 
-            plt.plot(S)
-            plt.plot(I)
-            plt.plot(R)
+            plt.plot(t, S, label='Susceptibles')
+            plt.plot(t, I, label='Infectious')
+            plt.plot(t, R, label='Recovered')
+
+            plt.xlabel('Time (in days)')
+            plt.ylabel('Population')
+
+            plt.legend()
+            plt.grid()
 
             bytes_image = io.BytesIO()
             plt.savefig(bytes_image, format='png')
