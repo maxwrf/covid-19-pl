@@ -12,25 +12,25 @@ app = Flask(__name__)
 @app.route('/')
 @app.route('/home')
 def home():
-    if request.args['beta'] == '':
+    try:
+        beta = float(request.args['beta'])
+    except BaseException:
         beta = 0.0005
-    else:
-        beta = request.args['beta']
 
-    if request.args['gamma'] == '':
+    try:
+        gamma = float(request.args['gamma'])
+    except BaseException:
         gamma = 0.1
-    else:
-        gamma = request.args['gamma']
 
-    if request.args['population'] == '':
+    try:
+        population = int(request.args['population'])
+    except BaseException:
         population = 1500
-    else:
-        population = request.args['population']
 
-    if request.args['time'] == '':
+    try:
+        integ_time = int(request.args['time'])
+    except BaseException:
         integ_time = 60
-    else:
-        integ_time = request.args['time']
 
     t = time.time()  # to prevent browser from caching images
 
