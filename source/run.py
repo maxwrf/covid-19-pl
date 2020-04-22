@@ -1,17 +1,21 @@
 from source.sir_model.sir_model import SIR
 from source.solver.forward_euler import ForwardEuler
 import numpy as np
-from source.sir_model.dynamic_beta import beta
-from source.sir_model.dynamic_gamma import gamma
 from source.solver.runge_kutta4 import RK4
 import pandas as pd
+from source.scraper.wiki_pl_scraper import crawl_wiki_pl
+import os
 
 
 def load_data(frontend=False):
     # TODO: move somewhere else
     population = 10.28 * 1e06
+    try:
+        data = pd.read_csv(os.getcwd() + '/data/pl_regions.csv')
+    except BaseException:
+        crawl_wiki_pl()
+        data = pd.read_csv(os.getcwd() + '/data/pl_regions.csv')
 
-    data = pd.read_csv('data/pl_regions.csv')
     data = data.iloc[:-3, :]  # last rows are total
     data = data[['Confirmed cases|Total', 'Recoveries|Total',
                  'Deaths|Total', 'Date (DGS report)']]
