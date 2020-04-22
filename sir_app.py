@@ -107,4 +107,4 @@ if __name__ == '__main__':
     load_dotenv(dotenv_path='config/.env')
     print(os.getenv("FLASK_APP"))
     print(os.getenv("FLASK_DEBUG"))
-    app.run(debug=True)
+    app.run(debug=False)
