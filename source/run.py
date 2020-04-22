@@ -52,19 +52,22 @@ def run_simple(b, g, p, t):
     return bytes_object
 
 
-def run_fit():
-    # fit Portugal data to generate beta and gamma
-    # TODO: pass solver as argument
+def fit():
     beta_fitted, gamma_fitted = SIR.fit(*load_data())
+    return beta_fitted, gamma_fitted
+
+
+def plot_fit(beta_fitted, gamma_fitted):
     data, population = load_data()
     S0, I0, R0 = [
         n/population for n in (data['S'].iloc[0],
                                data['I'].iloc[0],
                                data['R'].iloc[0],)]
+    print(beta_fitted, gamma_fitted)
     sir = SIR(beta_fitted, gamma_fitted, S0, I0, R0)
     solver = ForwardEuler(sir)
     solver.set_initial_conditions(sir.initial_conds)
-    time_steps = np.linspace(0, len(data) + 100, 10001)
+    time_steps = np.linspace(0, 60, 1001)
     u, t = solver.solve(time_steps)
     Spreds, Ipreds, Rpreds = u[:, 0] * \
         population, u[:, 1]*population, u[:, 2]*population

@@ -1,6 +1,6 @@
 from dotenv import load_dotenv
 from flask import Flask, render_template, url_for, send_file, make_response, request
-from source.run import run_simple, run_fit, load_data
+from source.run import run_simple, fit, plot_fit, load_data
 from source.scraper.wiki_pl_scraper import crawl_wiki_pl
 
 import os
@@ -77,16 +77,23 @@ def fitted():
 
     current_data, _ = load_data(frontend=True)  # load data to render
 
+    beta_fitted, gamma_fitted = fit()
+
     return render_template('fitted.html',
                            time=t,
                            tables=[current_data.to_html(classes='data')],
-                           titles=current_data.columns)
+                           titles=current_data.columns,
+                           beta_fitted=beta_fitted,
+                           gamma_fitted=gamma_fitted)
 
 
 @app.route('/fitted_plot', methods=['GET'])
 def fitted_plot():
     try:
-        bytes_object = run_fit()
+        beta_fitted = float(request.args['beta_fitted'])
+        gamma_fitted = float(request.args['gamma_fitted'])
+        print(beta_fitted, gamma_fitted)
+        bytes_object = plot_fit(beta_fitted, gamma_fitted)
 
         return send_file(bytes_object,
                          attachment_filename='fitted_plot.png',
@@ -107,4 +114,4 @@ if __name__ == '__main__':
     load_dotenv(dotenv_path='config/.env')
     print(os.getenv("FLASK_APP"))
     print(os.getenv("FLASK_DEBUG"))
-    app.run(debug=False)
+    app.run(debug=True)

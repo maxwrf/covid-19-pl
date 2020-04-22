@@ -58,9 +58,9 @@ class SIR():
             plt.ioff()
             matplotlib.pyplot.switch_backend('Agg')
 
-            plt.plot(t, S, label='Susceptibles')
-            plt.plot(t, I, label='Infectious')
-            plt.plot(t, R, label='Recovered')
+            plt.plot(t, S, label='Susceptibles', color='#cece31', linewidth=4)
+            plt.plot(t, I, label='Infectious', color='#800000', linewidth=4)
+            plt.plot(t, R, label='Recovered', color='#008080', linewidth=4)
 
             plt.xlabel('Time (in days)')
             plt.ylabel('Population')
@@ -75,7 +75,7 @@ class SIR():
             return bytes_image
 
     @staticmethod
-    def loss(params, data, population, optim_days=20):
+    def loss(params, data, population, optim_days=50):
         # Unpack beta and gamma on which ti compute the loss
         beta_fitted, gamma_fitted = params
 
