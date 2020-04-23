@@ -28,7 +28,7 @@ def crawl_wiki_pl(save_csv=True, no_total=True):
 
     page = requests.get(wiki_url, headers=headers).text
     soup = BeautifulSoup(page, 'lxml')
-    table = soup.find_all('table')[4]
+    table = soup.find_all('table')[3]
 
     # unstack column index
     df_by_region = pd.read_html(str(table))[0]
