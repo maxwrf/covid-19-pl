@@ -11,7 +11,7 @@ headers = {
                      Chrome/39.0.2171.95 Safari/537.36"
 }
 
-wiki_url = 'https://en.wikipedia.org/wiki/2020_coronavirus_pandemic_in_Portugal'
+wiki_url = 'https://en.wikipedia.org/wiki/Template:COVID-19_pandemic_data/Portugal_medical_cases'
 
 
 def crawl_wiki_pl(save_csv=True, no_total=True):
@@ -28,7 +28,7 @@ def crawl_wiki_pl(save_csv=True, no_total=True):
 
     page = requests.get(wiki_url, headers=headers).text
     soup = BeautifulSoup(page, 'lxml')
-    table = soup.find_all('table')[3]
+    table = soup.find_all('table')[0]
 
     # unstack column index
     df_by_region = pd.read_html(str(table))[0]
